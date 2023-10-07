@@ -1,5 +1,8 @@
+//  The following code is the simulation code for "Three-dimensional steady-state phonon transport" as presented in the Manuscript.
+//  Please note that this code does not provide a widely applicable angle allocation function. If you need to reproduce the examples 
+//  in the manuscript, the angle allocation part in this code should suffice. If you encounter any errors, please write a separate angle allocation function for each process.
 #include "mpi.h"
-#include"calFunction.h"
+#include"../calFunction.h"
 
 const double kb = 1.3806488e-23;// Planck constant, J s.
 const double h = 6.62606957e-34;// Dirac constant, J s.
@@ -561,12 +564,14 @@ int main(int argc,char** argv){
                 }
                 msn1=sn1+n1-1;
             }else{
-              cout<<"error:1"<<endl;
+              cout<<"error:Please manually assign angles to each process."<<endl;
               return 0;
             }
         }else{
             n1=1;
             n2=1;
+
+            cout<<"Warning: np > mn1*mn2, The output may not be correct."<<endl;
         }
     }
     np=np2;

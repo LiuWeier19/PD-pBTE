@@ -1,6 +1,9 @@
-//2d
-#include"calFunction.h"
+//  The following code is the simulation code for "Two-dimensional phonon heat conduction along thin films" as presented in the Manuscript. 
+//  To meet the approximation conditions for the analytical solution, deltaT needs to be significantly smaller than T0. Additionally, for small Knudsen numbers kn, 
+//  using a deltaT that is too small can lead to significant computational errors due to the substantial difference between the deviation function g and e^0. 
+//  Therefore, deltaT should be adjusted for different Knudsen numbers. When the computed results approach periodicity, we use the results at x/nx=0.5 as the outcomes presented in the Manuscript.
 
+#include"../calFunction.h"
 using namespace std;
 const double kb = 1.3806488e-23;// Planck constant, J s.
 const double h = 6.62606957e-34;// Dirac constant, J s.

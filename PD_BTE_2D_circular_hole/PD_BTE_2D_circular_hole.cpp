@@ -1,4 +1,6 @@
-#include"calFunction.h"
+//  The following code is the simulation code for "Two-dimensional phonon heat conduction with circular holes" as presented in the Manuscript. For the threshold value of "residual," we recommend using either 1e-2 or 1e-3.
+
+#include"../calFunction.h"
 
 using namespace std;
 const double kb = 1.3806488e-23;// Planck constant, J s.
@@ -11,7 +13,7 @@ const double T0=0.;
 const double Tx0=1.,Txn=0.;
 const double deltaT=1.;
 
-const int nx=50,n1=8,n2=16,nz=50,n_boundry=200;//nx-x ,n1-theta ,n2-phi,nz-z
+const int nx=100,n1=8,n2=16,nz=100,n_boundry=200;//nx-x ,n1-theta ,n2-phi,nz-z
 const double llsi=260.4e-9;
 const double para3=1/llsi;
 const double kn=0.1;
@@ -1702,7 +1704,7 @@ int main(){
 
         int j=0;
         residual=100000.;
-        while(residual>1e-3&&j<100){
+        while(residual>1e-3&&j<10000){
             double a=0;
 
             memcpy(I00,I0,sizeof(I0));

@@ -1,5 +1,5 @@
 //1d
-#include"calFunction.h"
+#include"../calFunction.h"
 //the global variable
 const double kb = 1.3806488e-23;// Planck constant, J s.
 const double h = 6.62606957e-34;// Dirac constant, J s.
@@ -27,7 +27,7 @@ double eprt_pddo(int x,int n,double u2,double *I0,double deltax,double L,double 
     return If1;
 }
 
-void out_file(const char *file,double *T,double *x,int nx,double *q,double *k){   //output file 
+void out_file(string file,double *T,double *x,int nx,double *q,double *k){   //output file 
     ofstream outfile;
     outfile.open(file);
     outfile<<"x,"<<"T*,"<<"q,"<<"q*"<<endl;
@@ -158,7 +158,7 @@ int main(){
     double beta;
 	double u1[glnu]={-1},u2[glnu]={0},u[glnu],x[nx+1],xlong[nx+1];
     double q[nx+1]={0},k[nx+1]={0},qf[nx+1],qb[nx+1],k2[nx+1]={0};
-    double sum1[nx+1]={0},sum2[nx+1]={0},I0[nx+1],T[nx+1],T2[nx+1],I0_ll[nx+1];
+    double sum1[nx+1]={0},sum2[nx+1]={0},I0[nx+1],T[nx+1],T2[nx+1],I0_ll[nx+1],I00[nx+1];
     double L=ll/kn,deltax=L/nx;   
     double deltaxh=3.*deltax;
 	deltaxh=deltaxh*(1+1e-9);
@@ -230,47 +230,45 @@ int main(){
 	makeparaf(u2, x,xlong,deltaxh, para1f,para_d1f, HN1f);
 	makeparab(u1, x,xlong,deltaxh, para1b,para_d1b, HN1b);
 
-	finish=clock();
-    totaltime=(double)(finish-start)/CLOCKS_PER_SEC;
-	cout<<"\n initialization time is "<<totaltime<<" s"<<endl;
+	for(int l=0;l<nx+1;l++){
+		sum1[l]=GL4(If[l],0.,1.,nu);
+		sum2[l]=GL4(Ib[l],-1.,0.,nu);
 
+		I0[l]=(sum1[l]+sum2[l])/2.;   
+		I0_ll[l]=I0[l]/ll;
+
+	}
 
     int j=0;double residual=10.;
 
     while(residual>1e-6&&j<200000){
-		double c=0.,d=0.;
-
-        for(int l=0;l<nx+1;l++){
-			sum1[l]=GL4(If[l],0.,1.,nu);
-		    sum2[l]=GL4(Ib[l],-1.,0.,nu);
-
-		    I0[l]=(sum1[l]+sum2[l])/2.;   
-			I0_ll[l]=I0[l]/ll;
-
-	    }
-		
+		double c=0.;
 		for(int l=0;l<nx+1;l++){
-			for(int n=0;n<glnu;n++){
-				Iff[l][n]=If[l][n];
-				Ibb[l][n]=Ib[l][n];
-			}
+			I00[l]=I0[l];
 		}       
 
 		for (int l=0;l<nx+1;l++){
 			for(int n=0;n<glnu;n++){
 				If[l][n]=eprt_pddo_f(l,n,u2[n],I0_ll,deltax,L,If,x,xlong,deltaxh,para1f[l][n],para_d1f[l][n],HN1f[l][n]);
-				c=max(fabs(Iff[l][n]-If[l][n]),c);
 			}  
 		}
 
         for (int l=nx;l>=0;l--){
 			for(int n=0;n<glnu;n++){
 				Ib[l][n]=eprt_pddo_b(l,n,u1[n],I0_ll,deltax,L,Ib,x,xlong,deltaxh,para1b[l][n],para_d1b[l][n],HN1b[l][n]);
-				d=max(fabs(Ibb[l][n]-Ib[l][n]),d);
 			}  
 		}
 
-		residual=max(c,d);
+		for(int l=0;l<nx+1;l++){
+			sum1[l]=GL4(If[l],0.,1.,nu);
+		    sum2[l]=GL4(Ib[l],-1.,0.,nu);
+
+		    I0[l]=(sum1[l]+sum2[l])/2.;   
+			I0_ll[l]=I0[l]/ll;
+			c=max(fabs(I00[l]-I0[l]),c);
+	    }
+
+		residual=c;
 		j++;                             
 	} 
 
@@ -296,11 +294,8 @@ int main(){
 		k2[l]=q[l]/(qa1-qb2);
 	}
 	cout<<j<<endl;
-	char filename0[100]="Kn_1000_r_3_GL_4";char filename1[10]=".xml";const char* file0;
-    ostringstream osr;
-    string temp=string(filename0)+osr.str()+string(filename1);
-    file0=temp.c_str();
 
+	string file0="PD_1D_kn_"+to_string(kn)+".xml";
 	out_file(file0,T2,x,nx,q,k2);
 
     finish=clock();
