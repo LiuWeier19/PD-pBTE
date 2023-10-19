@@ -15,7 +15,7 @@ const double deltaT=0.00005;// Temperature difference between two boundaries
 const int nx=10,n1=8,n2=16,nz=1000;//nx-x ,n1-theta ,n2-phi,nz-z
 const double llsi=260.4e-9;//mean free path of Si
 const double para3=1/llsi;
-const double kn=10.;
+const double kn=0.1;
 const double D=llsi/kn,deltaz=D/nz;
 const double delta1=pi/2./n1,delta2=pi/n2,deltax=deltaz;
 const double L=nx*deltax;
@@ -70,7 +70,7 @@ double PD_eprtff(double para1,double para2,int i,int j,int m,int n,double I0[nx+
       temp=tempff[i][j][m][n];
     }
     else if(j==0){
-      temp=(-qd[i][j]/pi);
+      temp=(-qd[i][j]/pi/v);
     }
 
     else{
@@ -103,7 +103,7 @@ double PD_eprtbf(double para1,double para2,int i,int j,int m,int n,double I0[nx+
       temp=tempff[i][j][m][n];
     }
     else if(j==0){
-        temp=(-qd[i][j]/pi);
+        temp=(-qd[i][j]/pi/v);
     }
     
     else{
@@ -477,8 +477,8 @@ int main(){
 
         for(int l=0;l<nx+2*nr;l++){
             for(int m=0;m<nz+1;m++){
-                I0[l][m]=C*v*T[l][m]/4./pi;
-                qd[l][m]=-I0[l][m]*pi;
+                I0[l][m]=C*T[l][m]/4./pi;
+                qd[l][m]=-I0[l][m]*pi*v;
             }
         }
 
@@ -488,7 +488,7 @@ int main(){
 
         int j=0;
         residual=10.;
-        while(residual>1e-4&&j<50000){
+        while(residual>1e-6&&j<50000){
             double a=0;
 
             memcpy(I00,I0,sizeof(I0));//I00
@@ -504,11 +504,11 @@ int main(){
               tempbf[l][m][n][i]=I0[l][m];
             }
             else if(i==0||n==0||n==n2){
-              tempff[l][m][n][i]=I0[l][m]-llsi*costheta1[i]*C*v*deltaT*(1.)/4./pi/L;
-              tempbf[l][m][n][i]=I0[l][m]-llsi*costheta2[i]*C*v*deltaT*(1.)/4./pi/L;
+              tempff[l][m][n][i]=I0[l][m]-llsi*costheta1[i]*C*deltaT*(1.)/4./pi/L;
+              tempbf[l][m][n][i]=I0[l][m]-llsi*costheta2[i]*C*deltaT*(1.)/4./pi/L;
             }else{
-              tempff[l][m][n][i]=I0[l][m]-llsi*costheta1[i]*C*v*deltaT*(1.-exp(-m*deltaz/llsi/(sintheta1[i]*sinu1[n])))/4./pi/L;
-              tempbf[l][m][n][i]=I0[l][m]-llsi*costheta2[i]*C*v*deltaT*(1.-exp(-m*deltaz/llsi/(sintheta2[i]*sinu1[n])))/4./pi/L;
+              tempff[l][m][n][i]=I0[l][m]-llsi*costheta1[i]*C*deltaT*(1.-exp(-m*deltaz/llsi/(sintheta1[i]*sinu1[n])))/4./pi/L;
+              tempbf[l][m][n][i]=I0[l][m]-llsi*costheta2[i]*C*deltaT*(1.-exp(-m*deltaz/llsi/(sintheta2[i]*sinu1[n])))/4./pi/L;
             }
             
           }
@@ -570,7 +570,7 @@ int main(){
                           +GL4_I0(tempbf[l][nz-m],sintheta2,pi/2.,pi,n1,pi,2.*pi,n2))/4./pi;
 
                       if(m==0){
-                        qd[l][m]=(GL4_q_2(tempff[l][nz-m],sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(tempbf[l][nz-m],sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
+                        qd[l][m]=v*(GL4_q_2(tempff[l][nz-m],sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(tempbf[l][nz-m],sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
                       }
                     }
 
@@ -586,9 +586,9 @@ int main(){
 
     for(int l=0;l<nx+2*nr;l++){
   		  	    for(int m=0;m<nz+1;m++){
-                      qf[l][m]=(GL4_I0(tempff[l][m],sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(tempff[l][nz-m],sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
-                      qb[l][m]=(GL4_I0(tempbf[l][m],sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(tempbf[l][nz-m],sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
-                      q[l][m]= qf[l][m]+qb[l][m]; 
+                      qf[l][m]=v*(GL4_I0(tempff[l][m],sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(tempff[l][nz-m],sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
+                      qb[l][m]=v*(GL4_I0(tempbf[l][m],sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(tempbf[l][nz-m],sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
+                      q[l][m]=qf[l][m]+qb[l][m]; 
 
                     if(l>=nr&&l<nx+nr){
                       I0[l][m]=(GL4_I0(tempff[l][m],sintheta1,0.,pi/2.,n1,0.,pi,n2)
@@ -598,10 +598,10 @@ int main(){
                     }
 
                     if(m==0){
-                      qd[l][m]=(GL4_q_2(tempff[l][nz-m],sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(tempbf[l][nz-m],sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
+                      qd[l][m]=v*(GL4_q_2(tempff[l][nz-m],sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(tempbf[l][nz-m],sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
                     }  
 
-                    T[l][m]=4.*pi*I0[l][m]/C/v;
+                    T[l][m]=4.*pi*I0[l][m]/C;
                 }
             }
 

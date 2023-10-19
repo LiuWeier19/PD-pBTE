@@ -1,4 +1,4 @@
-//  The following code is the simulation code for "Two-dimensional phonon heat conduction with circular holes" as presented in the Manuscript. For the threshold value of "residual," we recommend using either 1e-2 or 1e-3.
+//  The following code is the simulation code for "Two-dimensional phonon heat conduction with circular holes" as presented in the Manuscript. For the threshold value of "residual," we recommend using either 1e-5 or 1e-6.
 
 #include"../calFunction.h"
 
@@ -36,7 +36,7 @@ const int ncx=(nx/2)+nr-1,ncz=nz/2,ncr=nx*0.3;
 const int xl1=ncx-ncr-nr,xl2=ncx+ncr+nr,zl1=ncz-ncr-nr,zl2=ncz+ncr+nr;
 
 const double cx=ncx*deltax,cz=ncz*deltaz,cr=ncr*deltax;
-const double deltaI0=C*v*deltaT/4./pi;
+const double deltaI0=C*deltaT/4./pi;
 
 struct realHlist{
   int nodeNumX;
@@ -108,7 +108,7 @@ struct realNode_boundry{
 void out_file(string file,double T[][nz+1],double *x,int nx,int nz,double *q,double *k){
     ofstream outfile;
     outfile.open(file);
-    outfile<<"x,"<<"qxbar,"<<"k,"<<"qx"<<endl;
+    outfile<<"x,"<<"qxbar/Lx,"<<"k,"<<"qx"<<endl;
 	for(int i=0;i<nx+2*nr-1;i++){
 		outfile<<showpoint<<setprecision(8)<<x[i]<<","<<showpoint<<setprecision(8)<<q[i]<<","<<showpoint<<setprecision(8)<<k[i]<<",";
 		for(int j=0;j<nz;j++){
@@ -1105,10 +1105,10 @@ double PD_eprtff_bc_z0(double para1,double para2,int l,int m,int n,double I0,rea
     int nrr;
 
     if(l==n_boundry){
-      temp=(-1.*rn_b_z0[l]->thisRnode->qb)/pi;
+      temp=(-1.*rn_b_z0[l]->thisRnode->qb)/pi/v;
     }
     else if((l>(n_boundry/2))&&(n<rn_b_z0[l]->clot[m])&&(l!=n_boundry)){
-      temp=rn_b_z0[l]->qdmm;
+      temp=rn_b_z0[l]->qdmm/v;
     }
     else{
         double sum1=0;
@@ -1137,14 +1137,14 @@ double PD_eprtff_bc_zn(double para1,double para2,int l,int m,int n,double I0,rea
     int nrr;
 
     if(l==(n_boundry-2)/2){
-      temp=(-1.*rn_b_zn[l]->thisRnode->qd)/pi;
+      temp=(-1.*rn_b_zn[l]->thisRnode->qd)/pi/v;
     }
     else if(l>((n_boundry-2)/2)){
-      temp=rn_b_zn[l]->qdmm;
+      temp=rn_b_zn[l]->qdmm/v;
     }
 
     else if((l<((n_boundry-2)/2))&&(n>rn_b_zn[l]->clot[m])){
-      temp=rn_b_zn[l]->qdmm;
+      temp=rn_b_zn[l]->qdmm/v;
     }
     
     else{
@@ -1205,9 +1205,9 @@ double PD_eprtbf_bc_z0(double para1,double para2,int l,int m,int n,double I0,rea
     double temp;
     int nrr;
     if(l==0){
-      temp=(rn_b_z0[l]->thisRnode->qf)/pi;
+      temp=(rn_b_z0[l]->thisRnode->qf)/pi/v;
     }else if((l<(n_boundry/2))&&(n<rn_b_z0[l]->clot[m])){
-      temp=rn_b_z0[l]->qdmm;
+      temp=rn_b_z0[l]->qdmm/v;
     }
     else{
         double sum1=0;
@@ -1235,11 +1235,11 @@ double PD_eprtbf_bc_zn(double para1,double para2,int l,int m,int n,double I0,rea
     double temp;
     int nrr;
     if(l==(n_boundry-2)/2){
-      temp=(-1.*rn_b_zn[l]->thisRnode->qd)/pi;
+      temp=(-1.*rn_b_zn[l]->thisRnode->qd)/pi/v;
     }else if(l<((n_boundry-2)/2)){
-      temp=rn_b_zn[l]->qdmm;
+      temp=rn_b_zn[l]->qdmm/v;
     }else if((l>(n_boundry/2))&&(n>rn_b_zn[l]->clot[m])){
-      temp=rn_b_zn[l]->qdmm;
+      temp=rn_b_zn[l]->qdmm/v;
     }
     else{
         double sum1=0;
@@ -1398,7 +1398,7 @@ double makeQDMM(double sintheta1[],double costheta1[],double sintheta2[],double 
       delete Idmmff[ii];delete Idmmfb[ii];delete Idmmbf[ii];delete Idmmbb[ii];
     }
     delete Idmmff;delete Idmmfb;delete Idmmbf;delete Idmmbb;
-    
+    qout=qout*v;
     return qout;
 }
 
@@ -1650,8 +1650,8 @@ int main(){
         for(int l=0;l<nx+2*nr-1;l++){
             for(int m=0;m<nz+1;m++){
 
-                I0[l][m]=C*v*T[l][m]/4./pi;
-                qd[l][m]=-I0[l][m]*pi;
+                I0[l][m]=C*T[l][m]/4./pi;
+                qd[l][m]=-I0[l][m]*v*pi;
 
                 for(int n=0;n<glnn2;n++){
                   for(int i=0;i<glnn1;i++){
@@ -1663,15 +1663,15 @@ int main(){
         }
 
         for(int l=0;l<n_boundry+1;l++){
-          rn_b_z0[l]->thisRnode->I0=C*v*rn_b_z0[l]->thisRnode->T/4./pi;
-          rn_b_z0[l]->thisRnode->qf=rn_b_z0[l]->thisRnode->I0*pi;
-          rn_b_z0[l]->thisRnode->qb=rn_b_z0[l]->thisRnode->I0*pi;
-          rn_b_z0[l]->thisRnode->qu=rn_b_z0[l]->thisRnode->I0*pi;
-          rn_b_z0[l]->thisRnode->qd=rn_b_z0[l]->thisRnode->I0*pi;
+          rn_b_z0[l]->thisRnode->I0=C*rn_b_z0[l]->thisRnode->T/4./pi;
+          rn_b_z0[l]->thisRnode->qf=rn_b_z0[l]->thisRnode->I0*pi*v;
+          rn_b_z0[l]->thisRnode->qb=rn_b_z0[l]->thisRnode->I0*pi*v;
+          rn_b_z0[l]->thisRnode->qu=rn_b_z0[l]->thisRnode->I0*pi*v;
+          rn_b_z0[l]->thisRnode->qd=rn_b_z0[l]->thisRnode->I0*pi*v;
 
           makeClot(rn_b_z0[l]->thisRnode->X,rn_b_z0[l]->thisRnode->Z,cx,cz,rn_b_z0[l]->clot,u1,u2,theta1,theta2);
 
-          rn_b_z0[l]->qdmm=rn_b_z0[l]->thisRnode->I0;
+          rn_b_z0[l]->qdmm=rn_b_z0[l]->thisRnode->I0*v;
 
           for(int n=0;n<glnn2;n++){
             for(int i=0;i<glnn1;i++){
@@ -1682,15 +1682,15 @@ int main(){
         }
 
         for(int l=0;l<n_boundry-1;l++){
-          rn_b_zn[l]->thisRnode->I0=C*v*rn_b_zn[l]->thisRnode->T/4./pi;
-          rn_b_zn[l]->thisRnode->qf=rn_b_zn[l]->thisRnode->I0*pi;
-          rn_b_zn[l]->thisRnode->qb=rn_b_zn[l]->thisRnode->I0*pi;
-          rn_b_zn[l]->thisRnode->qu=rn_b_zn[l]->thisRnode->I0*pi;
-          rn_b_zn[l]->thisRnode->qd=rn_b_zn[l]->thisRnode->I0*pi;
+          rn_b_zn[l]->thisRnode->I0=C*rn_b_zn[l]->thisRnode->T/4./pi;
+          rn_b_zn[l]->thisRnode->qf=rn_b_zn[l]->thisRnode->I0*pi*v;
+          rn_b_zn[l]->thisRnode->qb=rn_b_zn[l]->thisRnode->I0*pi*v;
+          rn_b_zn[l]->thisRnode->qu=rn_b_zn[l]->thisRnode->I0*pi*v;
+          rn_b_zn[l]->thisRnode->qd=rn_b_zn[l]->thisRnode->I0*pi*v;
 
           makeClot(rn_b_zn[l]->thisRnode->X,rn_b_zn[l]->thisRnode->Z,cx,cz,rn_b_zn[l]->clot,u1,u2,theta1,theta2);
 
-          rn_b_zn[l]->qdmm=rn_b_zn[l]->thisRnode->I0;
+          rn_b_zn[l]->qdmm=rn_b_zn[l]->thisRnode->I0*v;
 
           for(int n=0;n<glnn2;n++){
             for(int i=0;i<glnn1;i++){
@@ -1704,7 +1704,7 @@ int main(){
 
         int j=0;
         residual=100000.;
-        while(residual>1e-3&&j<10000){
+        while(residual>1e-6&&j<20000){
             double a=0;
 
             memcpy(I00,I0,sizeof(I0));
@@ -1818,17 +1818,17 @@ int main(){
                       if(l==(nx/2)+nr-1){
                         for(int n=0;n<glnn2;n++){
                           for(int i=0;i<glnn1;i++){
-                            rn[l][m]->tempff[n][i]=rn[l][m]->tempff[n][i]-I0[l][m]+C*v*(T0+deltaT/2.)/4./pi;
-                            rn[l][m]->tempbf[n][i]=rn[l][m]->tempbf[n][i]-I0[l][m]+C*v*(T0+deltaT/2.)/4./pi;
+                            rn[l][m]->tempff[n][i]=rn[l][m]->tempff[n][i]-I0[l][m]+C*(T0+deltaT/2.)/4./pi;
+                            rn[l][m]->tempbf[n][i]=rn[l][m]->tempbf[n][i]-I0[l][m]+C*(T0+deltaT/2.)/4./pi;
                           }
                         }
-                        I0[l][m]=C*v*(T0+deltaT/2.)/4./pi;
+                        I0[l][m]=C*(T0+deltaT/2.)/4./pi;
                       }
 
                       if(col[l][m]==0){
                         T[l][m]=0;
                       }else{
-                        T[l][m]=4.*pi*I0[l][m]/C/v;
+                        T[l][m]=4.*pi*I0[l][m]/C;
                       }
 
                     a=max(fabs(I0[l][m]-I00[l][m]),a);  
@@ -1840,10 +1840,10 @@ int main(){
                           +GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,0.,pi,n2)
                           +GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,pi,2.*pi,n2))/4./pi;
             
-            rn_b_z0[0]->thisRnode->qf=GL4_I0(rn_b_z0[0]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[0]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2);
-            rn_b_z0[0]->thisRnode->qb=GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2);
-            rn_b_z0[0]->thisRnode->qu=GL4_q_2(rn_b_z0[0]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[0]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2);
-            rn_b_z0[0]->thisRnode->qd=GL4_q_2(rn_b_z0[0]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[0]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2);
+            rn_b_z0[0]->thisRnode->qf=v*(GL4_I0(rn_b_z0[0]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[0]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
+            rn_b_z0[0]->thisRnode->qb=v*(GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[0]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
+            rn_b_z0[0]->thisRnode->qu=v*(GL4_q_2(rn_b_z0[0]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[0]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2));
+            rn_b_z0[0]->thisRnode->qd=v*(GL4_q_2(rn_b_z0[0]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[0]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
 
             rn_b_z0[0]->thisRnode->qx=rn_b_z0[0]->thisRnode->qf+rn_b_z0[0]->thisRnode->qb;
 
@@ -1852,10 +1852,10 @@ int main(){
                           +GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,0.,pi,n2)
                           +GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,pi,2.*pi,n2))/4./pi;
             
-            rn_b_z0[n_boundry]->thisRnode->qf=GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2);
-            rn_b_z0[n_boundry]->thisRnode->qb=GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2);
-            rn_b_z0[n_boundry]->thisRnode->qu=GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2);
-            rn_b_z0[n_boundry]->thisRnode->qd=GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2);
+            rn_b_z0[n_boundry]->thisRnode->qf=v*(GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
+            rn_b_z0[n_boundry]->thisRnode->qb=v*(GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[n_boundry]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
+            rn_b_z0[n_boundry]->thisRnode->qu=v*(GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2));
+            rn_b_z0[n_boundry]->thisRnode->qd=v*(GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[n_boundry]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
 
             rn_b_z0[n_boundry]->thisRnode->qx=rn_b_z0[n_boundry]->thisRnode->qf+rn_b_z0[n_boundry]->thisRnode->qb;
 
@@ -1865,10 +1865,10 @@ int main(){
                           +GL4_I0(rn_b_z0[l]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,0.,pi,n2)
                           +GL4_I0(rn_b_zn[l-1]->thisRnode->tempbf,sintheta2,pi/2.,pi,n1,pi,2.*pi,n2))/4./pi;
 
-              rn_b_z0[l]->thisRnode->qf=GL4_I0(rn_b_z0[l]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_zn[l-1]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2);
-              rn_b_z0[l]->thisRnode->qb=GL4_I0(rn_b_z0[l]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_zn[l-1]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2);
-              rn_b_z0[l]->thisRnode->qu=GL4_q_2(rn_b_z0[l]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[l]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2);
-              rn_b_z0[l]->thisRnode->qd=GL4_q_2(rn_b_zn[l-1]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_zn[l-1]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2);
+              rn_b_z0[l]->thisRnode->qf=v*(GL4_I0(rn_b_z0[l]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_zn[l-1]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
+              rn_b_z0[l]->thisRnode->qb=v*(GL4_I0(rn_b_z0[l]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_zn[l-1]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
+              rn_b_z0[l]->thisRnode->qu=v*(GL4_q_2(rn_b_z0[l]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_z0[l]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2));
+              rn_b_z0[l]->thisRnode->qd=v*(GL4_q_2(rn_b_zn[l-1]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_zn[l-1]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
 
               rn_b_z0[l]->thisRnode->qx=rn_b_z0[l]->thisRnode->qf+rn_b_z0[l]->thisRnode->qb;
 
@@ -1878,10 +1878,10 @@ int main(){
             for(int l=0;l<n_boundry-1;l++){
               rn_b_zn[l]->thisRnode->I0=rn_b_z0[l+1]->thisRnode->I0;
 
-              rn_b_zn[l]->thisRnode->qf=GL4_I0(rn_b_zn[l]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[l+1]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2);
-              rn_b_zn[l]->thisRnode->qb=GL4_I0(rn_b_zn[l]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[l+1]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2);
-              rn_b_zn[l]->thisRnode->qu=GL4_q_2(rn_b_zn[l]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_zn[l]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2);
-              rn_b_zn[l]->thisRnode->qd=GL4_q_2(rn_b_z0[l+1]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[l+1]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2);
+              rn_b_zn[l]->thisRnode->qf=v*(GL4_I0(rn_b_zn[l]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)+GL4_I0(rn_b_z0[l+1]->thisRnode->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2));
+              rn_b_zn[l]->thisRnode->qb=v*(GL4_I0(rn_b_zn[l]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)+GL4_I0(rn_b_z0[l+1]->thisRnode->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2));
+              rn_b_zn[l]->thisRnode->qu=v*(GL4_q_2(rn_b_zn[l]->thisRnode->tempff,sinsintheta1,sinu1,0.,pi/2.,n1,0.,pi,n2)+GL4_q_2(rn_b_zn[l]->thisRnode->tempbf,sinsintheta2,sinu1,pi/2.,pi,n1,0.,pi,n2));
+              rn_b_zn[l]->thisRnode->qd=v*(GL4_q_2(rn_b_z0[l+1]->thisRnode->tempff,sinsintheta1,sinu2,0.,pi/2.,n1,pi,2.*pi,n2)+GL4_q_2(rn_b_z0[l+1]->thisRnode->tempbf,sinsintheta2,sinu2,pi/2.,pi,n1,pi,2.*pi,n2));
 
               rn_b_zn[l]->thisRnode->qx=rn_b_zn[l]->thisRnode->qf+rn_b_zn[l]->thisRnode->qb;
 
@@ -1905,10 +1905,10 @@ int main(){
                           +GL4_I0(rn[l][nz-m]->tempbf,sintheta2,pi/2.,pi,n1,pi,2.*pi,n2))/4./pi;
 
 
-                      q[l][m]=GL4_I0(rn[l][m]->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)
+                      q[l][m]=(GL4_I0(rn[l][m]->tempff,sincostheta1,0.,pi/2.,n1,0.,pi,n2)
                         +GL4_I0(rn[l][nz-m]->tempff,sincostheta1,0.,pi/2.,n1,pi,2.*pi,n2)
                         +GL4_I0(rn[l][m]->tempbf,sincostheta2,pi/2.,pi,n1,0.,pi,n2)
-                        +GL4_I0(rn[l][nz-m]->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2);
+                        +GL4_I0(rn[l][nz-m]->tempbf,sincostheta2,pi/2.,pi,n1,pi,2.*pi,n2))*v;
 
                     }else{
                       I0[l][m]=I0[l][nz-m];
@@ -1918,7 +1918,7 @@ int main(){
                     if(col[l][m]==0){
                       T[l][m]=0;
                     }else{
-                      T[l][m]=4.*pi*I0[l][m]/C/v;
+                      T[l][m]=4.*pi*I0[l][m]/C;
                     }
                     rn[l][m]->T=T[l][m];
                 }
@@ -1941,7 +1941,6 @@ int main(){
             for(int l=0;l<nx+2*nr-1;l++){
                 k[l]=qx0*L/TT;
             }
-            cout<<TT<<endl;
 
         string file0="PD_kn_"+to_string(kn)+"_Qx_p0.3.xml";
         out_file(file0,q,x,nx, nz,qxx,k);

@@ -23,7 +23,7 @@ const double deltax=Lx/nx,deltay=deltax,deltaz=deltax;
 const double Ly=ny*deltay,Lz=nz*deltaz;
 
 const double delta1=pi/2./mn1,delta2=pi/2./mn2;
-const double ITx0=C*v*Tx0/4./pi,ITxn=C*v*T0/4./pi, ITy0=C*v*T0/4./pi,ITyn=C*v*T0/4./pi,ITz0=C*v*T0/4./pi,ITzn=C*v*T0/4./pi;
+const double ITx0=C*Tx0/4./pi,ITxn=C*T0/4./pi, ITy0=C*T0/4./pi,ITyn=C*T0/4./pi,ITz0=C*T0/4./pi,ITzn=C*T0/4./pi;
 
 const int nr=3;
 const double deltaxh=deltax*nr;
@@ -838,7 +838,7 @@ int main(int argc,char** argv){
           rn[i][j][k]->nodeX=i*deltax;rn[i][j][k]->nodeY=j*deltay;rn[i][j][k]->nodeZ=k*deltaz;
           rn[i][j][k]->T=T0;
 
-          I0[i][j][k]=C*v*T0/4./pi;
+          I0[i][j][k]=C*T0/4./pi;
           I00[i][j][k]=I0[i][j][k];
           I0ll[i][j][k]=I0[i][j][k]/llsi;
           I0ll_1[i][j*(nz+1)+k]=I0[i][j][k]/llsi;
@@ -893,7 +893,7 @@ int main(int argc,char** argv){
     int nd=0;
     double rrr=0.;
     double tempfffff=0;
-    while(residual>1e-4&&nd<10000){
+    while(residual>1e-6&&nd<10000){
       rrr=0.;
       for(int i=0;i<nx+1;i++){
           for(int j=0;j<ny+1;j++){
@@ -1126,17 +1126,20 @@ int main(int argc,char** argv){
               rn[i][j][k]->qy=0;
               rn[i][j][k]->qz=0;
               for(int llq=0;llq<np;llq++){
-
                 rn[i][j][k]->qx+=qxb[i][llq*(nz+1)*(ny+1)+j*(nz+1)+k];
                 rn[i][j][k]->qy+=qyb[i][llq*(nz+1)*(ny+1)+j*(nz+1)+k];
                 rn[i][j][k]->qz+=qzb[i][llq*(nz+1)*(ny+1)+j*(nz+1)+k];
               }
 
+              rn[i][j][k]->qx=rn[i][j][k]->qx*v;
+              rn[i][j][k]->qy=rn[i][j][k]->qy*v;
+              rn[i][j][k]->qz=rn[i][j][k]->qz*v;
+
               qx2[i][j][k]=3.*rn[i][j][k]->qx*Lx/C/v/llsi/(Tx0-T0);
               qy2[i][j][k]=3.*rn[i][j][k]->qy*Lx/C/v/llsi/(Tx0-T0);
               qz2[i][j][k]=3.*rn[i][j][k]->qz*Lx/C/v/llsi/(Tx0-T0);
 
-              rn[i][j][k]->T=I0[i][j][k]*4.*pi/C/v;
+              rn[i][j][k]->T=I0[i][j][k]*4.*pi/C;
             }
           }
         }

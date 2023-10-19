@@ -10,22 +10,9 @@ const int nx=100.,nu=25.; //nx-x parts,nu-Number of angle integration intervals
 const double ll=260.4e-9;//mean free path of Si
 const double ll_1=1./ll;
 const double deltau=1./nu;
-const double kn=1000.;
+const double kn=10.;
 const int gln=4;//The number of points of Gauss-Legendre integral
 const int glnu=gln*nu;
-
-
-double eprt_pddo(int x,int n,double u2,double *I0,double deltax,double L,double I[nx+1][nu+1]){
-    double If1;
-    if(x==0){
-        If1=C*v*Tl/4./pi;
-    }else if(x==nx){
-        If1=C*v*Tr/4./pi;
-    }else{
-        If1=I0[x]-ll*u2*0.5*(1/deltax)*(I[x+1][n]-I[x-1][n]);
-    }
-    return If1;
-}
 
 void out_file(string file,double *T,double *x,int nx,double *q,double *k){   //output file 
     ofstream outfile;
@@ -115,7 +102,7 @@ void makeparab(double u[], double xl[nx+1], double xlong[nx+1],double deltaxh, d
 double eprt_pddo_f(int x,int n,double u2,double *I0_ll,double deltax,double L,double** I,double xl[nx+1],double xlong[nx+1],double deltaxh, double para1,double para_d1,int HN){
     double If1;
 	if(x==0){
-		If1=C*v*Tl/4./pi;
+		If1=C*Tl/4./pi;
 	}else{
 		double sum1=0;//sum1-If
 		int i=1;
@@ -133,7 +120,7 @@ double eprt_pddo_f(int x,int n,double u2,double *I0_ll,double deltax,double L,do
 double eprt_pddo_b(int x,int n,double u2,double *I0_ll,double deltax,double L,double** I,double xl[nx+1],double xlong[nx+1],double deltaxh, double para1,double para_d1,int HN){
     double If1;
 	if(x==nx){
-		If1=C*v*Tr/4./pi;
+		If1=C*Tr/4./pi;
 	}else{
 		double sum1=0;//sum1-If
 		int i=1;
@@ -212,8 +199,8 @@ int main(){
 
 	for (int l=0;l<nx+1;l++){	
 		for(int n=0;n<glnu;n++){
-				If[l][n]=C*v*T[l]/4./pi;
-				Ib[l][n]=C*v*T[l]/4./pi;
+				If[l][n]=C*T[l]/4./pi;
+				Ib[l][n]=C*T[l]/4./pi;
 		}        
 	}
 
@@ -282,13 +269,13 @@ int main(){
 
 		I0[l]=(sum1[l]+sum2[l])/2.;
 
-		T[l]=4.*pi*I0[l]/C/v;    
+		T[l]=4.*pi*I0[l]/C;    
 		T2[l]=T[l]-Tr;      
 
 		sum1[l]=GL4(If[l],0.,1.,nu,u2);
 		sum2[l]=GL4(Ib[l],-1.,0.,nu,u1); 
 
-		q[l]=2*pi*(sum2[l]+sum1[l]);
+		q[l]=2*pi*v*(sum2[l]+sum1[l]);
 
 	    k[l]=q[l]*(L);
 		k2[l]=q[l]/(qa1-qb2);
