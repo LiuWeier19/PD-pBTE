@@ -1,5 +1,5 @@
 //1d
-#include"../calFunction.h"
+#include"./calFunction.h"
 //the global variable
 const double kb = 1.3806488e-23;// Planck constant, J s.
 const double h = 6.62606957e-34;// Dirac constant, J s.

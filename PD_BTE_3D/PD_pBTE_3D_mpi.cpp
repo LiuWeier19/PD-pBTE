@@ -1,8 +1,8 @@
-//  The following code is the simulation code for "Three-dimensional steady-state phonon transport" as presented in the Manuscript.
+//  The following code is the simulation code for "Three-dimensional steady-state phonon transport in cubic region" as presented in the paper.
 //  Please note that this code does not provide a widely applicable angle allocation function. If you need to reproduce the examples 
-//  in the manuscript, the angle allocation part in this code should suffice. If you encounter any errors, please write a separate angle allocation function for each process.
+//  in the paper, the angle allocation part in this code should suffice. If you encounter any errors, please write a separate angle allocation function for each process.
 #include "mpi.h"
-#include"../calFunction.h"
+#include"./calFunction.h"
 
 const double kb = 1.3806488e-23;// Planck constant, J s.
 const double h = 6.62606957e-34;// Dirac constant, J s.

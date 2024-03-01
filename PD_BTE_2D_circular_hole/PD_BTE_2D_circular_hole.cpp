@@ -1,6 +1,6 @@
 //  The following code is the simulation code for "Two-dimensional phonon heat conduction with circular holes" as presented in the Manuscript. For the threshold value of "residual," we recommend using either 1e-5 or 1e-6.
 
-#include"../calFunction.h"
+#include"./calFunction.h"
 
 using namespace std;
 const double kb = 1.3806488e-23;// Planck constant, J s.
